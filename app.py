@@ -4,12 +4,48 @@ import pandas as pd
 # Configurações básicas da página
 st.set_page_config(page_title="Gabarito Instantâneo PMMC", page_icon="📝", layout="centered")
 
-# Matriz de Correção Oficial (Gabarito Oculto)
-MATRIZ_RESPOSTAS = {
-    1: "A", 2: "D", 3: "D", 4: "C", 5: "C", 6: "C", 7: "A", 8: "C", 9: "B", 10: "C",
-    11: "C", 12: "C", 13: "C", 14: "C", 15: "C", 16: "C", 17: "D", 18: "A", 19: "C", 20: "B",
-    21: "D", 22: "D", 23: "D", 24: "B", 25: "D", 26: "A", 27: "A", 28: "B", 29: "C", 30: "D",
-    31: "B", 32: "C", 33: "D", 34: "A", 35: "B", 36: "C", 37: "C", 38: "A", 39: "B", 40: "B"
+# Matriz de Correção Oficial com os respectivos Domínios de Competência
+MATRIZ_COMPLETA = {
+    1: {"resp": "A", "dominios": ["Gestão e Organização do Processo de Trabalho", "Saúde Coletiva"]},
+    2: {"resp": "D", "dominios": ["Gestão e Organização do Processo de Trabalho", "Avaliação da Qualidade e Auditoria", "Saúde Coletiva"]},
+    3: {"resp": "D", "dominios": ["Princípios da APS", "Avaliação da Qualidade e Auditoria", "Saúde Coletiva"]},
+    4: {"resp": "C", "dominios": ["Atenção à Saúde"]},
+    5: {"resp": "C", "dominios": ["Atenção à Saúde"]},
+    6: {"resp": "C", "dominios": ["Atenção à Saúde"]},
+    7: {"resp": "A", "dominios": ["Atenção à Saúde"]},
+    8: {"resp": "C", "dominios": ["Pesquisa Médica", "Gestão em Saúde", "Comunicação e Docência"]},
+    9: {"resp": "B", "dominios": ["Atenção à Saúde"]},
+    10: {"resp": "C", "dominios": ["Atenção à Saúde"]},
+    11: {"resp": "C", "dominios": ["Atenção à Saúde"]},
+    12: {"resp": "C", "dominios": ["Atenção à Saúde"]},
+    13: {"resp": "C", "dominios": ["Atenção à Saúde"]},
+    14: {"resp": "C", "dominios": ["Atenção à Saúde", "Princípios da APS"]},
+    15: {"resp": "C", "dominios": ["Atenção à Saúde"]},
+    16: {"resp": "C", "dominios": ["Atenção à Saúde"]},
+    17: {"resp": "D", "dominios": ["Atenção à Saúde"]},
+    18: {"resp": "A", "dominios": ["Atenção à Saúde"]},
+    19: {"resp": "C", "dominios": ["Atenção à Saúde"]},
+    20: {"resp": "B", "dominios": ["Atenção à Saúde"]},
+    21: {"resp": "D", "dominios": ["Atenção à Saúde"]},
+    22: {"resp": "D", "dominios": ["Atenção à Saúde"]},
+    23: {"resp": "D", "dominios": ["Atenção à Saúde"]},
+    24: {"resp": "B", "dominios": ["Atenção à Saúde"]},
+    25: {"resp": "D", "dominios": ["Atenção à Saúde"]},
+    26: {"resp": "A", "dominios": ["Atenção à Saúde"]},
+    27: {"resp": "A", "dominios": ["Atenção à Saúde"]},
+    28: {"resp": "B", "dominios": ["Atenção à Saúde"]},
+    29: {"resp": "C", "dominios": ["Atenção à Saúde"]},
+    30: {"resp": "D", "dominios": ["Atenção à Saúde"]},
+    31: {"resp": "B", "dominios": ["Atenção à Saúde"]},
+    32: {"resp": "C", "dominios": ["Atenção à Saúde"]},
+    33: {"resp": "D", "dominios": ["Atenção à Saúde"]},
+    34: {"resp": "A", "dominios": ["Atenção à Saúde", "Saúde Coletiva"]},
+    35: {"resp": "B", "dominios": ["Atenção à Saúde"]},
+    36: {"resp": "C", "dominios": ["Atenção à Saúde"]},
+    37: {"resp": "C", "dominios": ["Atenção à Saúde"]},
+    38: {"resp": "A", "dominios": ["Atenção à Saúde"]},
+    39: {"resp": "B", "dominios": ["Saúde Coletiva"]},
+    40: {"resp": "B", "dominios": ["Atenção à Saúde"]}
 }
 
 st.title("📝 Correção Instantânea de Simulado")
@@ -18,11 +54,9 @@ st.markdown("Marque suas respostas abaixo e clique em **Emitir Boletim**. Nada s
 st.subheader("📋 Folha de Respostas")
 respostas_usuario = {}
 
-# Exibe as 40 questões de forma limpa e compacta (em 2 colunas para poupar rolagem)
+# Exibe as 40 questões em 2 colunas
 col_esq, col_dir = st.columns(2)
-
 for q in range(1, 41):
-    # Divide as questões igualmente entre a coluna da esquerda e da direita
     with col_esq if q <= 20 else col_dir:
         respostas_usuario[q] = st.radio(
             f"Questão {q}:",
@@ -34,29 +68,39 @@ for q in range(1, 41):
 
 st.divider()
 
-# Botão para calcular e exibir o resultado na hora
+# Botão para calcular e exibir o resultado
 if st.button("📊 Emitir Meu Boletim", type="primary", use_container_width=True):
     total_acertos = 0
     detalhes_prova = []
+    calculo_dominios = {}
 
-    # Processa as respostas comparando com o gabarito
+    # Processa as respostas
     for q, resp_aluno in respostas_usuario.items():
-        gabarito_oficial = MATRIZ_RESPOSTAS[q]
+        dados_q = MATRIZ_COMPLETA[q]
+        gabarito_oficial = dados_q["resp"]
         correto = (resp_aluno == gabarito_oficial)
         
         if correto:
             total_acertos += 1
             
+        # Contabiliza os domínios de competência
+        for dom in dados_q["dominios"]:
+            if dom not in calculo_dominios:
+                calculo_dominios[dom] = {"acertos": 0, "total": 0}
+            calculo_dominios[dom]["total"] += 1
+            if correto:
+                calculo_dominios[dom]["acertos"] += 1
+
         detalhes_prova.append({
             "Questão": q,
             "Sua Resposta": resp_aluno,
             "Gabarito": gabarito_oficial,
-            "Resultado": "🟢 Correto" if correto else "🔴 Incorreto"
+            "Resultado": "🟢 Correto" if correto else "🔴 Incorreto",
+            "Domínios": ", ".join(dados_q["dominios"])
         })
 
-    # Exibição dos Resultados (Métricas)
-    st.header("📋 Seu Resultado")
-    
+    # 1. MENSURAÇÃO GERAL (Métricas)
+    st.header("📋 Seu Resultado Geral")
     c1, c2, c3 = st.columns(3)
     nota_final = (total_acertos / 40) * 10
     porcentagem = (total_acertos / 40) * 100
@@ -67,9 +111,22 @@ if st.button("📊 Emitir Meu Boletim", type="primary", use_container_width=True
 
     st.divider()
     
-    # Tabela detalhada (Espelho da Prova)
+    # 2. DESEMPENHO POR DOMÍNIO DE COMPETÊNCIA
+    st.subheader("🎯 Desempenho por Domínio de Competência")
+    
+    # Renderiza barras de progresso limpas para cada domínio encontrado nas questões
+    for dom, valores in calculo_dominios.items():
+        pct_dom = (valores["acertos"] / valores["total"]) * 100
+        st.write(f"**{dom}** ({valores['acertos']}/{valores['total']} acertos)")
+        st.progress(pct_dom / 100)
+        st.caption(f"Aproveitamento: {pct_dom:.1f}%")
+        st.write("")
+
+    st.divider()
+    
+    # 3. TABELA DETALHADA
     st.subheader("🔍 Espelho da Prova")
     df_resultado = pd.DataFrame(detalhes_prova)
     st.dataframe(df_resultado.set_index("Questão"), use_container_width=True, height=500)
     
-    st.success("Boletim gerado com sucesso! (Nenhum dado foi coletado ou armazenado)")
+    st.success("Boletim por competências gerado com sucesso! (Nenhum dado foi salvo)")
